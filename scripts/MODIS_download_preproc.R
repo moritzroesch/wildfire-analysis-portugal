@@ -42,12 +42,16 @@ prt <- prt %>%
 
 # MODIStsp download and processing ----------------------------------------
 
-# MODIStsp() allows to automatically download and pre-process any MODIS product
+# MODIStsp() allows the automatically download and pre-processing for any MODIS product
 # available (see https://cran.r-project.org/web/packages/MODIStsp/vignettes/MODIStsp.html).
-# With help of the MODIStsp GUI a .json file was created defining the product
-# and processing parameters. This sections loops over them......
-
-
+# With help of the MODIStsp GUI a .json file (opts_file) was created defining the product
+# and processing parameters. Following processing steps are automatically applied
+# to the selected MODIS product (for all details see "auxiliary/MOD009A1_PRT_setup.json"):
+#   - Selection of MOD09A1 8 days surface reflection product (500m)
+#   - subset to B1 (Red), B2 (NIR), B3 (Blue), B4 (Green), B6 (SWIR)
+#   - mosaicing of Terra MODIS scenes to cover the whole AOI of Portugal
+#   - Clip to bounding box of prt.gpkg
+#   - reprojection to local WGS 84 / UTM zone 29N (EPSG:32629)
 
 opts_file <- "auxiliary/MOD09A1_PRT_setup.json" # MODIStsp setup file with pre-defined processing parameters
 acq_dates <- c("2021.10.08", "2020.10.07") # MODIS Terra acquisition dates

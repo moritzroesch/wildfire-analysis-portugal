@@ -25,6 +25,7 @@ library(MODIStsp) # tools for downloading and preprocessing MODIS data
 # install.packages("MODIStsp") for any problems with installation on LINUX systems
 # refer to Section 2.2 of documentation:
 # https://cran.r-project.org/web/packages/MODIStsp/vignettes/MODIStsp.html
+source("scripts/utils/funcs.R")
 
 
 
@@ -50,13 +51,11 @@ prt <- prt %>%
 
 opts_file <- "auxiliary/MOD09A1_PRT_setup.json" # MODIStsp setup file with pre-defined processing parameters
 acq_dates <- c("2021.10.08", "2020.10.07") # MODIS Terra acquisition dates
-out_folder <- "data" # output folder for processed MODIS products and raw data 
+out_folder <- str_c(getwd(),"/data") # full path to output folder for processed MODIS products and raw data 
 
-# The personal credentials are retrieved from a hidden file.
-# Enter your NASA Earthdata personal credentials (format string) here to run the script:
-# WRITE FUNCTION THAT ASK FOR credentials
-user <- "moritz.roesch@stud-mail.uni-wuerzburg.de" # NASA Earthdata username
-password <- "Ea2021Gle!" # NASA Earthdata password
+# Run function to enter your NASA Earthdata login credentials:
+# No account? Register under: https://urs.earthdata.nasa.gov/
+earthdata_credentials()
 
 for (i in 1:length(acq_dates)){
   
@@ -77,15 +76,10 @@ for (i in 1:length(acq_dates)){
            opts_file = opts_file,
            start_date = acq_date,
            end_date = acq_date,
-           user = user,
-           password = password,
+           user = credentials[["user"]],
+           password = credentials[["password"]],
            out_folder = out_folder_year,
+           out_folder_mod = out_folder_year_raw,
            parallel = TRUE)
   print(str_c("MOD09A1 download and processing for ", acq_date, " done."))
 }
-
-
-
-
-
-

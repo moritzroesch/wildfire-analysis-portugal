@@ -2,7 +2,7 @@
 ##
 ## Script name: MCD64A1_download_preproc.R
 ##
-## Purpose of script: Downloading and preprocessing of MODIS/Terra+Aqua
+## Purpose of script: Downloading and pre-processing of MODIS/Terra+Aqua
 #                     Burned Area Monthly L3 Global 500 m SIN Grid (MCD64A1)
 ##
 ## Sections:  Get country vector data
@@ -73,6 +73,11 @@ vector_path <- "data/prt.gpkg" # path to vectorlayer of Portugal
 # No account? Register under: https://urs.earthdata.nasa.gov/
 earthdata_credentials()
 
+
+# Data is stored in directories for each year. Within these, a folder named after
+# the selected processing vector layer (i.e. prt) contains all bands/monthly burn-
+# day layers and a created time series RasterStack of all bands.
+
 for (i in 1:length(years)){
   
   # Construct yearly fire season start and end date
@@ -102,7 +107,6 @@ for (i in 1:length(years)){
            parallel = TRUE)
   print(str_c("MCD64A1 download and processing for", years[i], "done.", sep = " "))
 }
-
 
 
 

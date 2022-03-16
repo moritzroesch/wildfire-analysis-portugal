@@ -14,9 +14,9 @@
 ##              - automated download and pre-processing of MCD64A1 product for
 ##                five years of fire season (2017-2021) in Portugal
 ##
-##            MODIS data stacking
-##              - pulling of data from MODIStsp folder structures
-##              - creation of raster stacks
+##            Read/write timeseries stacks
+##              - read created time series stacks
+##              - write them as .tif files for further analysis
 ##
 ## Author: Moritz Rösch
 ##
@@ -56,30 +56,33 @@ prt <- prt %>%
 # available (see https://cran.r-project.org/web/packages/MODIStsp/vignettes/MODIStsp.html).
 # With help of the MODIStsp GUI a .json file (opts_file) was created defining the product
 # and processing parameters. Following processing steps are automatically applied
-# to the selected MODIS product (for all details see "auxiliary/MOD09A1_PRT_setup.json"):
-#   - Selection of MOD09A1 8-days surface reflection product (500m)
-#   - subset to B1 (Red), B2 (NIR), B3 (Blue), B4 (Green), B6 (SWIR)
-#   - mosaicing of Terra MODIS scenes to cover the whole AOI of Portugal
+# to the selected MCD64A1 product (for all details see "auxiliary/MCD64A1_PRT_setup.json"):
+#   - select MODIS/Terra+Aqua Burned Area Monthly L3 Global 500 m SIN Grid (MCD64A1)
+#   - subset to monthly burned_day band for Portugal fire season (June to September)
+#   - mosaic of MODIS scenes to cover the whole AOI of Portugal
 #   - Clip to bounding box of prt.gpkg
 #   - reprojection to local WGS 84 / UTM zone 29N (EPSG:32629)
 
-opts_file <- "auxiliary/MOD09A1_PRT_setup.json" # MODIStsp setup file with pre-defined processing parameters
-acq_dates <- c("2017.10.08", "2018.10.08", "2019.10.08", "2020.10.07","2021.10.08")  # MODIS Terra acquisition dates
-out_folder <- str_c(getwd(),"/data") # full path to output folder for processed MODIS products and raw data 
+opts_file <- "auxiliary/MCD64A1_PRT_setup.json" # MODIStsp setup file with pre-defined processing parameters
+out_folder <- "data" # full path to output folder for processed MODIS products and raw data 
+years <- as.character(c(2017:2021))
+fire_season <- c("06.01", "09.30") # set Portugal fire season start and end date in format MM.DD
+vector_path <- "data/prt.gpkg" # path to vectorlayer of Portugal
 
 # Run function to enter your NASA Earthdata login credentials:
 # No account? Register under: https://urs.earthdata.nasa.gov/
 earthdata_credentials()
 
-for (i in 1:length(acq_dates)){
+for (i in 1:length(years)){
   
-  # Acquisition date selection
-  acq_date <- acq_dates[i] # set acquisition date
-  year <- str_sub(acq_date, 1, 4) # define year variable
+  # Construct yearly fire season start and end date
+  start_date <- str_c(years[i], fire_season[1], sep = ".")
+  end_date <- str_c(years[i], fire_season[2], sep = ".")
+
   
   # Set paths and create directories
-  out_folder_year <- str_c(out_folder, "/", year) # define output folder
-  out_folder_year_raw <- str_c(out_folder, "/", year, "/raw") # define output folder for raw HDF files
+  out_folder_year <- str_c(out_folder, years[i], sep = "/") # define output folder
+  out_folder_year_raw <- str_c(out_folder, years[i], "raw", sep = "/") # define output folder for raw HDF files
   if (file.exists(out_folder_year) == FALSE){ # create new folders if not already done
     dir.create(out_folder_year)
     dir.create(out_folder_year_raw)
@@ -88,36 +91,34 @@ for (i in 1:length(acq_dates)){
   # Launch MODIStsp download and processing
   MODIStsp(gui = FALSE,
            opts_file = opts_file,
-           start_date = acq_date,
-           end_date = acq_date,
-           user = credentials[["user"]],
+           start_date = start_date,
+           end_date = end_date,
+           user = credentials[["user"]], # retrieve inserted user credentials
            password = credentials[["password"]],
+           spatmeth = "file", # select processing extent defined by vector file
+           spafile = vector_path, # path to vectordata (Portugal)
            out_folder = out_folder_year,
            out_folder_mod = out_folder_year_raw,
            parallel = TRUE)
-  print(str_c("MOD09A1 download and processing for ", acq_date, " done."))
+  print(str_c("MCD64A1 download and processing for", years[i], "done.", sep = " "))
 }
 
 
 
-# MODIS data stacking -----------------------------------------------------
 
-years <- as.character(c(2017:2021))
-MODIS_stacks <- list()
+# Read/write timeseries stacks --------------------------------------------
+
+data_list <- list()
 for (i in years){
   
-  # move into directory of year
-  out_folder_bands <- str_c(out_folder, "/", i, "/Surf_Ref_8Days_500m_v6")
-  bands_list <- list()
-  for (j in list.files(out_folder_bands)){
-    path_to_band <- str_c(out_folder_bands, "/", j)
-    r <- rast(list.files(path_to_band, full.names = TRUE)) # load single MODIS band
-    bands_list[j] <- r
-  }
-  r_stack <- rast(bands_list) #stack all MODIS bands of one scene
-  MODIS_stacks[i] <- r_stack
-  writeRaster(r_stack, str_c(out_folder, "/", i, "/MOD09A1_", 
-                             str_subset(acq_dates, pattern = i),
-                             "_stack.tif"),
-              overwrite = TRUE)
+  # move into directory of timeseries stack
+  out_folder_ts <- str_c(out_folder, i, "prt", "Burned_Monthly_500m_v6", 
+                            "Time_Series", "RData", "Terra", "Burn_Date", sep = "/")
+  
+  # load .RData workspace with stored timeseries stack
+  load(list.files(out_folder_ts, pattern = ".RData", full.names = TRUE)) # loads raster_ts file
+  data_list[str_c("burnday_", i)] <- raster_ts
+  # write out burnday timeseries stack as .tif
+  writeRaster(raster_ts, str_c(out_folder, "/", i, "/burnday_", i, ".tif"), overwrite = TRUE)
+  rm(raster_ts)
 }

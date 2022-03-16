@@ -1,8 +1,9 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 ##
-## Script name: MODIS_download_preproc.R
+## Script name: MCD64A1_download_preproc.R
 ##
-## Purpose of script: Downloading and precprocessing of MOD09A1 8-day SR product
+## Purpose of script: Downloading and preprocessing of MODIS/Terra+Aqua
+#                     Burned Area Monthly L3 Global 500 m SIN Grid (MCD64A1)
 ##
 ## Sections:  Get country vector data
 ##              - download, filter and reproject vector data for Portugal
@@ -10,7 +11,8 @@
 ##            MODIStsp download and processing
 ##              - define pre-required variables for MODIStsp function
 ##              - query NASA earthdata credentials
-##              - automated download and pre-processing for five selected MODIS scenes
+##              - automated download and pre-processing of MCD64A1 product for
+##                five years of fire season (2017-2021) in Portugal
 ##
 ##            MODIS data stacking
 ##              - pulling of data from MODIStsp folder structures
@@ -18,7 +20,7 @@
 ##
 ## Author: Moritz Rösch
 ##
-## Date: 2022-03-14
+## Date: 2022-03-16
 ##
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 

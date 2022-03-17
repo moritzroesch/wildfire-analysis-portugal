@@ -1,16 +1,17 @@
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ##
 ##
-## Script name: MCD64A1_wildfire_analysis.R
+## Script name: MCD64A1_poly_conversion.R
 ##
-## Purpose of script: Burnt area analysis of fire seasons 2017-2021 in Portugal
+## Purpose of script: Conversion of MCD64A! burn day layers to vectordata
 ##
 ## Sections:  Load data stacks
 ##              - loading of pre-processed MODIS time series stacks
 ##
 ##            Raster time series to sf
-##              - convert yearly MCD64A1 stacks to sf object
-##              
-##
+##              - convert yearly MCD64A1 stacks to polygons
+##              - manual dissolving of monthly Julian days
+##              - creation of yearly sf objects
+##              - creation and writing of time series sf object (burned area 2017-2021)
 ##
 ## Author: Moritz Rösch
 ##
@@ -59,8 +60,8 @@ for (i in 1:length(data)){
   # loop over every band (month) and create polygons from raster
   poly_monthly_list <- list()
   for (band in 1:nlyr(r)){
-    month <- months[band] # extract month
     
+    month <- months[band] # extract month
     poly <- as.polygons(r[[band]], dissolve = FALSE) # polygonize each layer of stack
     # dissolve was set to FALSE since it produces false values in polygons (always takes values of first band (June) of SpatRaster, although only one band (except first run alsways not June) exist
 
@@ -71,7 +72,7 @@ for (i in 1:length(data)){
       group_by(julian_day) %>%
       summarize() %>%  # summarize/dissolve by julian day
       mutate(month = month, year = year) %>%
-      relocate(geometry, .after = last_col()) # relocate geometr column to end of dataframe
+      relocate(geometry, .after = last_col()) # relocate geometry column to end of dataframe
       
     poly_monthly_list[[band]] <- poly
     rm(poly)

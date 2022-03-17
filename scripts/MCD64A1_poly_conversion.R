@@ -52,6 +52,8 @@ data
 poly_yearly_list <- list() # list for storing the yearly burned area polygons
 # Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
 for (i in 1:length(data)){
+  # IGNORE any error: attempt to apply non-function
+  # Error couldn´t be localized but does not interfer with the loop, therfore it can be ignored.
   
   # select time series stack and year variable
   r <- data[[i]]
@@ -67,7 +69,7 @@ for (i in 1:length(data)){
 
     poly <- poly %>% 
       st_as_sf() %>% # convert to sf object
-      filter(!across(1, ~.%in% c(-2,-1,0))) %>% # removes rows with unburned (0), fill (-1) and water (-2) polygons in first column
+      filter(!across(1, ~ . %in% c(-2,-1,0))) %>% # removes rows with unburned (0), fill (-1) and water (-2) polygons in first column
       rename(julian_day = 1) %>% # rename first column to julian day
       group_by(julian_day) %>%
       summarize() %>%  # summarize/dissolve by julian day
@@ -90,3 +92,5 @@ for (i in 1:length(data)){
     rm(poly_monthly_list, poly_yearly_list)
   }
 }
+
+burned # final sf object with all burned area polygons by julian day, month, year

@@ -49,6 +49,7 @@ data
 # Raster time series to sf -------------------------------------------------
 
 poly_yearly_list <- list() # list for storing the yearly burned area polygons
+# Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
 for (i in 1:length(data)){
   
   # select time series stack and year variable
@@ -59,7 +60,9 @@ for (i in 1:length(data)){
   poly_monthly_list <- list()
   for (band in 1:nlyr(r)){
     month <- months[band] # extract month
+    
     poly <- as.polygons(r[[band]], dissolve = FALSE) # polygonize each layer of stack
+    # dissolve was set to FALSE since it produces false values in polygons (always takes values of first band (June) of SpatRaster, although only one band (except first run alsways not June) exist
 
     poly <- poly %>% 
       st_as_sf() %>% # convert to sf object
@@ -80,7 +83,9 @@ for (i in 1:length(data)){
   # combine all yearly polygons and write layer
   if (i == length(data)){
     burned <- do.call(rbind, poly_yearly_list)
-    st_write(burned, str_c("data/burned_area",
-                           years[1], "_", years[length(years)], ".gpkg"),append = FALSE)
+    st_write(burned, str_c("data/burned_area_",
+                           years[1], "_", years[length(years)], ".gpkg"), append = FALSE)
+    # Clear duplicates in env
+    rm(poly_monthly_list, poly_yearly_list)
   }
 }

@@ -74,10 +74,9 @@ ui <- dashboardPage(
                     step = 1)
       ),
       fluidRow(
-        selectInput(inputId = "group",
-                    label = h3("Group by:"),
-                    choices = list("Day" = "date", "Month" = "month", "Year" = "year"),
-                    selected = "year")
+        selectInput(inputId = "region",
+                    label = h3("Select region:"),
+                    choices = prt$NAME_1)
       )
     )
   ),
@@ -91,7 +90,7 @@ ui <- dashboardPage(
 # Define server logic ----
 server <- function(input, output){
   
-  data_input <- reactive({
+  wildfire_input <- reactive({
     wildfire %>% 
       filter(year >= input$fire_season[1]) %>% 
       filter(year <= input$fire_season[2]) #%>% # interactive filtering of wildfire season by date range
@@ -99,12 +98,18 @@ server <- function(input, output){
     #summarize(area_ha = sum(area_ha))# summarize the area by the group argument
   })
   
+  # ERROR POLYGON SELECTION (maybe multiple)
+  #region_input <- reactive({
+  #  prt %>% 
+  #    filter(NAME1 == input$region)
+  #})
+  
     
   output$mymap <- renderLeaflet(
     leaflet() %>% 
       addTiles() %>% 
       setView(lng = -7.95, lat = 39.83, zoom = 6) %>% 
-      addPolygons(data = data_input(),
+      addPolygons(data = wildfire_input(),
                   color = ~pal(as.factor(year)),
                   opacity = 1,
                   fillColor = ~pal(as.factor(year)),
@@ -118,14 +123,31 @@ server <- function(input, output){
                                                       weight = 2,
                                                       bringToFront = TRUE),
                   popup = ~htmlEscape(NAME_1)) %>% 
-      addLegend(data = data_input(),
+      #addPolygons(data = region_input(),
+      #            color = "Red",
+      #            opacity = 1,
+      #            fillOpacity = 0,
+      #            weight = 2,
+      #            label = ~htmlEscape(NAME1)) %>% 
+      addLegend(data = wildfire_input(),
                 position = "bottomright",
                 pal = pal,
                 values = ~as.factor(year),
                 title = "Fire season")
   )
-    
- 
+  
+  #ERROR Polygon by clicking 
+  #click on polygon
+  #observe({ 
+  #  event <- input$map_shape_click
+  #  print(event$id)
+  #  
+  #  updateSelectInput(session,
+  #                    inputId = "region",
+  #                    label = "region",
+  #                    choices = prt$NAME_1,
+  #                    selected = event$id)
+  #})
 }
 
 

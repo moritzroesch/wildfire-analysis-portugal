@@ -42,13 +42,12 @@ library(tidyverse)
 
 wildfire <- st_read("data/burned_area_2017_2021.gpkg")
 wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
+wildfire$year <- as.numeric(wildfire$year)
 prt <- st_read("data/prt.gpkg")
 prt <- st_transform(prt, 4326)
 
 # Define color palette for year map
-pal <- colorBin("Set1",
-                domain = as.numeric(wildfire$year),
-                bins = length(unique(wildfire$year)))
+pal <- colorFactor("RdYlBu", domain = as.factor(wildfire$year))
 
 
 # UI ----------------------------------------------------------------------
@@ -58,9 +57,9 @@ pal <- colorBin("Set1",
 ui <- dashboardPage(
   skin = "red",
   dashboardHeader(
-    title = str_c("Wildfires and burned area in Portugal during fire seasons (",
-                  min(as.numeric(wildfire$year)), "-",
-                  max(as.numeric(wildfire$year)), ")"),
+    title = str_c("Burned area after wildfires in Portugal during fire seasons ",
+                  min(wildfire$year), "-",
+                  max(wildfire$year)),
     titleWidth = 800
   ),
   dashboardSidebar(
@@ -68,9 +67,9 @@ ui <- dashboardPage(
       fluidRow(
         sliderInput(inputId = "fire_season",
                     label = h3("Select fire season:"),
-                    min = min(as.numeric(wildfire$year)),
-                    max = max(as.numeric(wildfire$year)),
-                    value = c(min(as.numeric(wildfire$year)), max(as.numeric(wildfire$year))),
+                    min = min(wildfire$year),
+                    max = max(wildfire$year),
+                    value = c(min(wildfire$year), max(wildfire$year)),
                     sep="",
                     step = 1)
       ),
@@ -100,35 +99,36 @@ server <- function(input, output){
     #summarize(area_ha = sum(area_ha))# summarize the area by the group argument
   })
   
+    
   output$mymap <- renderLeaflet(
     leaflet() %>% 
       addTiles() %>% 
       setView(lng = -7.95, lat = 39.83, zoom = 6) %>% 
       addPolygons(data = data_input(),
-                  color = ~pal(as.numeric(year)),
+                  color = ~pal(as.factor(year)),
                   opacity = 1,
-                  fillColor = ~pal(as.numeric(year)),
+                  fillColor = ~pal(as.factor(year)),
                   fillOpacity = 1) %>% 
       addPolygons(data = prt,
                   color = "black",
                   opacity = 1,
                   fillOpacity = 0,
                   weight = 1,
-                  highlightOptions = highlightOptions(color = "white",
+                  highlightOptions = highlightOptions(color = "black",
                                                       weight = 2,
                                                       bringToFront = TRUE),
-                  popup = ~htmlEscape(NAME_1))
+                  popup = ~htmlEscape(NAME_1)) %>% 
+      addLegend(data = data_input(),
+                position = "bottomright",
+                pal = pal,
+                values = ~as.factor(year),
+                title = "Fire season")
   )
     
  
 }
 
-#x <- wildfire %>% 
-#  filter(year >= 2017) %>% 
-#  filter(year <= 2017) %>% # interactive filtering of wilfire season by date range
-#  group_by(month) %>% 
-#  summarize(area_ha = sum(area_ha))
-#View(head(x))
+
 
 # Run the app ----
 shinyApp(ui = ui, server = server)

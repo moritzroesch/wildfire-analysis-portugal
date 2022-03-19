@@ -53,7 +53,7 @@ poly_yearly_list <- list() # list for storing the yearly burned area polygons
 # Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
 for (i in 1:length(data)){
   # IGNORE any error: attempt to apply non-function
-  # Error couldn´t be localized but does not interfer with the loop, therfore it can be ignored.
+  # Error couldn´t be localized but does not interfer with the loop, therefore it can be ignored.
   
   # select time series stack and year variable
   r <- data[[i]]
@@ -73,7 +73,9 @@ for (i in 1:length(data)){
       rename(julian_day = 1) %>% # rename first column to julian day
       group_by(julian_day) %>%
       summarize() %>%  # summarize/dissolve by julian day
-      mutate(month = month, year = year) %>%
+      mutate(date = as.Date(julian_day, origin = str_c(year,"-01-01")), #convert days of year to date format
+             month = month,
+             year = year) %>%
       relocate(geometry, .after = last_col()) # relocate geometry column to end of dataframe
       
     poly_monthly_list[[band]] <- poly

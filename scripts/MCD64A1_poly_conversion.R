@@ -75,7 +75,8 @@ for (i in 1:length(data)){
       summarize() %>%  # summarize/dissolve by julian day
       mutate(date = as.Date(julian_day, origin = str_c(year,"-01-01")), #convert days of year to date format
              month = month,
-             year = year) %>%
+             year = year,
+             area_ha = st_area(.) / 10000) %>% # calculate area in hectare
       relocate(geometry, .after = last_col()) # relocate geometry column to end of dataframe
       
     poly_monthly_list[[band]] <- poly

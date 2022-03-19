@@ -31,6 +31,8 @@ library(tidyverse)
 
 # Load data stacks --------------------------------------------------------
 
+prt <- st_read("data/prt.gpkg")
+
 years <- as.character(c(2017:2021))
 months <- c("June", "July", "August", "September")
 data <- list()
@@ -53,10 +55,13 @@ poly_yearly_list <- list() # list for storing the yearly burned area polygons
 # Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
 for (i in 1:length(data)){
   # IGNORE any error: attempt to apply non-function
-  # Error couldn´t be localized but does not interfer with the loop, therefore it can be ignored.
+  # Error couldn´t be localized but does not interfere with the loop, therefore it can be ignored.
   
   # select time series stack and year variable
   r <- data[[i]]
+  
+  # mask data to outline of Portugal
+  r <- mask(r, vect(prt))
   year <- years[i]
   
   # loop over every band (month) and create polygons from raster
@@ -96,4 +101,4 @@ for (i in 1:length(data)){
   }
 }
 
-burned # final sf object with all burned area polygons by julian day, month, year
+burned # final sf object with all burned area polygons by julian day, date, month, year

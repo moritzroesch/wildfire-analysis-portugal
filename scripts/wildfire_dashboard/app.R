@@ -30,6 +30,7 @@
 library(shiny)
 library(shinydashboard)
 library(leaflet)
+library(htmltools)
 library(plotly)
 library(sf)
 library(tidyverse)
@@ -40,9 +41,14 @@ library(tidyverse)
 # Load data ---------------------------------------------------------------
 
 wildfire <- st_read("data/burned_area_2017_2021.gpkg")
+wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
+prt <- st_read("data/prt.gpkg")
+prt <- st_transform(prt, 4326)
 
-
-
+# Define color palette for year map
+pal <- colorBin("Set1",
+                domain = as.numeric(wildfire$year),
+                bins = length(unique(wildfire$year)))
 
 
 # UI ----------------------------------------------------------------------
@@ -54,7 +60,8 @@ ui <- dashboardPage(
   dashboardHeader(
     title = str_c("Wildfires and burned area in Portugal during fire seasons (",
                   min(as.numeric(wildfire$year)), "-",
-                  max(as.numeric(wildfire$year)), ")")
+                  max(as.numeric(wildfire$year)), ")"),
+    titleWidth = 800
   ),
   dashboardSidebar(
     column(12,
@@ -95,12 +102,22 @@ server <- function(input, output){
   
   output$mymap <- renderLeaflet(
     leaflet() %>% 
-      #setView() %>% 
       addTiles() %>% 
-      addPolygons(data = wildfire,
-                  color = "white",
-                  fillOpacity = 0.8,
-                  fillColor = data_input()$year)
+      setView(lng = -7.95, lat = 39.83, zoom = 6) %>% 
+      addPolygons(data = data_input(),
+                  color = ~pal(as.numeric(year)),
+                  opacity = 1,
+                  fillColor = ~pal(as.numeric(year)),
+                  fillOpacity = 1) %>% 
+      addPolygons(data = prt,
+                  color = "black",
+                  opacity = 1,
+                  fillOpacity = 0,
+                  weight = 1,
+                  highlightOptions = highlightOptions(color = "white",
+                                                      weight = 2,
+                                                      bringToFront = TRUE),
+                  popup = ~htmlEscape(NAME_1))
   )
     
  

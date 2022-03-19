@@ -9,10 +9,10 @@ wildfire <- st_transform(wildfire, 4326)
 prt <- st_read("data/prt.gpkg")
 prt <- st_transform(prt, 4326)
 
+
 pal <- colorBin("Set1",
                 domain = as.numeric(wildfire$year),
                 bins = length(unique(wildfire$year)))
-
 
 m <- leaflet() %>% 
   addTiles() %>% 

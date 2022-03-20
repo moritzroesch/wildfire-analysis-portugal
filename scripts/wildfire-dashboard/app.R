@@ -6,8 +6,10 @@
 ##                    plotly bar plot of burned areas in Portugal during
 ##                    fire seasons 2017-2021
 ##
-## Sections:  Load data 
+## Sections:  Load and manipulate data 
 ##              - load created wildfire and portugal vector data
+##              - create list for input selection of regions
+##              - union portugal polygons
 ##
 ##            UI
 ##              - construction of dashboard ui
@@ -43,11 +45,18 @@ library(tidyverse)
 
 
 
-# Load data ---------------------------------------------------------------
+# Load and manipulate data -------------------------------------------------
 
 # When running the app, working directory changes to wildfire-dashboard
-wildfire <- st_read("data/burned_area_2017_2021_WGS84.gpkg")
-prt <- st_read("data/prt_WGS84.gpkg")
+#setwd("scripts/wildfire-dashboard")
+wildfire <- st_read("Data/burned_area_2017_2021_WGS84.gpkg")
+prt <- st_read("Data/prt_WGS84.gpkg")
+
+# Construct named list of all subdivisions for user input
+region_list <- c("Portugal", prt$NAME_1)
+
+# Generate unified polygon of Portugal
+prt_uni <- st_union(prt)
 
 
 
@@ -77,10 +86,8 @@ ui <- dashboardPage(
       fluidRow(
         pickerInput(inputId = "region",
                     label = h3("Select region:"),
-                    choices = prt$NAME_1,
-                    options = list(`actions-box` = TRUE),
-                    multiple = TRUE,
-                    selected = prt$NAME_1)
+                    choices = region_list,
+                    options = list(`actions-box` = TRUE))
       )
     )
   ),
@@ -109,8 +116,12 @@ server <- function(input, output){
   
   # Reactive selection of region input
   region_input <- reactive({
-    prt %>% 
-      filter(NAME_1 %in% input$region)
+    if (input$region == "Portugal"){
+      prt_uni
+    } else {
+      prt %>% 
+        filter(NAME_1 %in% input$region)
+    }
   })
   
   
@@ -121,7 +132,7 @@ server <- function(input, output){
     })
   
   
-  # Add reactive part of leaflet (filterd by year or region) to leaflet proxy map
+  # Add reactive part of leaflet (filtered by year or region) to leaflet proxy map
   observe({
       
     # Define boundary of selected region polygons
@@ -140,15 +151,15 @@ server <- function(input, output){
                 opacity = 1,
                 fillColor = ~pal(as.factor(year)),
                 fillOpacity = 1) %>% 
-      addPolygons(data = region_input(),
-                  color = "black",
-                  opacity = 1,
-                  fillOpacity = 0,
-                  weight = 1,
-                  highlightOptions = highlightOptions(color = "black",
-                                                      weight = 2,
-                                                      bringToFront = TRUE),
-                  popup = ~htmlEscape(NAME_1))
+    addPolygons(data = region_input(),
+                color = "black",
+                opacity = 1,
+                fillOpacity = 0,
+                weight = 1)#,
+               # highlightOptions = highlightOptions(color = "red",
+              #                                      weight = 2,
+              #                                      bringToFront = TRUE),
+              #  label = ~htmlEscape(NAME_1))
   })
   
   
@@ -177,7 +188,12 @@ server <- function(input, output){
     
     # region subset
     sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error
-    wildfire_region <- st_intersection(wildfire_input(), region_input())
+    if (input$region == "Portugal"){
+      wildfire_region <- wildfire_input()
+    } else {
+      wildfire_region <- st_intersection(wildfire_input(), region_input())
+    }
+    
     
     plot_ly(
       x = ~wildfire_region$date,
@@ -187,9 +203,7 @@ server <- function(input, output){
       type = "bar",
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 
-      layout(title = str_c("Burned area (ha) in ",
-                           if(identical(region_input()$NAME_1, prt$NAME_1)){
-                             "Portugal"} else {region_input()$NAME1}),
+      layout(title = str_c("Burned area (ha) in ", input$region),
              yaxis = list(title = "Burned Area (in ha)"),
              xaxis = list(title = "Date"))
     

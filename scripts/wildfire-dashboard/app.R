@@ -157,7 +157,7 @@ server <- function(input, output){
       as.character()
     
     # Define color palette for year map
-    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
   
     # User input defined leaflet map 
     m <- leafletProxy("mymap") %>% 
@@ -187,7 +187,7 @@ server <- function(input, output){
   observe({
     
     # Define color palette for legend
-    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
     
     leafletProxy("mymap") %>% 
       clearControls() %>% 
@@ -204,7 +204,7 @@ server <- function(input, output){
   output$myplot <- renderPlotly({
     
     # Define color palette for bar color
-    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
     
     # region subset
     sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error

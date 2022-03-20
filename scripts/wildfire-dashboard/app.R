@@ -47,8 +47,6 @@ library(tidyverse)
 
 # When running the app, working directory changes to wildfire-dashboard
 wildfire <- st_read("data/burned_area_2017_2021_WGS84.gpkg")
-#wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
-#wildfire$year <- as.numeric(wildfire$year)
 prt <- st_read("data/prt_WGS84.gpkg")
 
 

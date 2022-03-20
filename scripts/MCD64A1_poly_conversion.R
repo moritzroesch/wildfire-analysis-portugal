@@ -52,7 +52,10 @@ data
 # Raster time series to sf -------------------------------------------------
 
 poly_yearly_list <- list() # list for storing the yearly burned area polygons
+
 # Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
+# Process run on personal laptop (20GB RAM, i7-7600 CPU@2.8Ghz) takes approx. 30 min.
+
 for (i in 1:length(data)){
   # IGNORE any ERROR: attempt to apply non-function
   # Error couldn´t be localized but does not interfere with the loop, therefore it can be ignored.

@@ -156,6 +156,24 @@ server <- function(input, output){
   #                    choices = prt$NAME_1,
   #                    selected = event$id)
   #})
+  
+  output$myplot <- renderPlotly({
+    
+    # region subset
+    
+    
+    plot_ly(
+      x = ~wildfire_input()$date,
+      y = ~wildfire_input()$area_ha,
+      type = "bar",
+      color = I("red"),
+      hovertemplate = paste('<b>Date</b>: %{x}',
+                            '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 
+      layout(title = str_c("Burned area in (ha)"),
+             yaxis = list(title = "Burned Area (in ha)"),
+             xaxis = list(title = "Date"))
+    
+  })
 }
 
 

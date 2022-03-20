@@ -42,3 +42,27 @@ m <- leaflet() %>%
             title = "Fire season")
 m  
 
+
+# plotly
+library(sf)
+library(tidyverse)
+library(plotly)
+
+wildfire <- st_read("data/burned_area_2017_2021.gpkg")
+wildfire <- st_transform(wildfire, 4326)
+wildfire$year <- as.numeric(wildfire$year)
+prt <- st_read("data/prt.gpkg")
+prt <- st_transform(prt, 4326)
+
+fig <- plot_ly(
+  x = ~wildfire$date,
+  y = ~wildfire$area_ha,
+  type = "bar",
+  color = I("red"),
+  hovertemplate = paste('<b>Date</b>: %{x}',
+                        '<br><b>Burned area</b>: %{y:.2f} ha</br>'))
+fig <- fig %>% 
+  layout(title = str_c("Burned area in (ha)"),
+         yaxis = list(title = "Burned Area (in ha)"),
+         xaxis = list(title = "Date"))
+fig

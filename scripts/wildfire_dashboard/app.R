@@ -23,12 +23,14 @@
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
 
-
+# FILE IS NOT FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# Upload maybe needed, shp need to be in dir of app.R
 
 # Packages ----------------------------------------------------------------
 
 library(shiny)
 library(shinydashboard)
+library(shinyWidgets)
 library(leaflet)
 library(htmltools)
 library(plotly)
@@ -74,9 +76,12 @@ ui <- dashboardPage(
                     step = 1)
       ),
       fluidRow(
-        selectInput(inputId = "region",
+        pickerInput(inputId = "region",
                     label = h3("Select region:"),
-                    choices = prt$NAME_1)
+                    choices = prt$NAME_1,
+                    options = list(`actions-box` = TRUE),
+                    multiple = TRUE,
+                    selected = prt$NAME_1)
       )
     )
   ),
@@ -90,31 +95,40 @@ ui <- dashboardPage(
 # Define server logic ----
 server <- function(input, output){
   
+  # Reactive filtering of wildfires by date
   wildfire_input <- reactive({
     wildfire %>% 
       filter(year >= input$fire_season[1]) %>% 
-      filter(year <= input$fire_season[2]) #%>% # interactive filtering of wildfire season by date range
-    #group_by(input$group) %>% 
-    #summarize(area_ha = sum(area_ha))# summarize the area by the group argument
+      filter(year <= input$fire_season[2])
   })
   
-  # ERROR POLYGON SELECTION (maybe multiple)
-  #region_input <- reactive({
-  #  prt %>% 
-  #    filter(NAME1 == input$region)
-  #})
+  # Reactive selection of region
+  region_input <- reactive({
+    prt %>% 
+      filter(NAME_1 %in% input$region)
+  })
   
     
-  output$mymap <- renderLeaflet(
+  output$mymap <- renderLeaflet({
+    
+    
+    # Define color palette for year map
+    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    
+    # Define boundary of selected region polygons
+    bbox <- region_input() %>% 
+      st_bbox() %>% 
+      as.character()
+    
     leaflet() %>% 
       addTiles() %>% 
-      setView(lng = -7.95, lat = 39.83, zoom = 6) %>% 
+      fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>% 
       addPolygons(data = wildfire_input(),
                   color = ~pal(as.factor(year)),
                   opacity = 1,
                   fillColor = ~pal(as.factor(year)),
                   fillOpacity = 1) %>% 
-      addPolygons(data = prt,
+      addPolygons(data = region_input(),
                   color = "black",
                   opacity = 1,
                   fillOpacity = 0,
@@ -123,18 +137,12 @@ server <- function(input, output){
                                                       weight = 2,
                                                       bringToFront = TRUE),
                   popup = ~htmlEscape(NAME_1)) %>% 
-      #addPolygons(data = region_input(),
-      #            color = "Red",
-      #            opacity = 1,
-      #            fillOpacity = 0,
-      #            weight = 2,
-      #            label = ~htmlEscape(NAME1)) %>% 
       addLegend(data = wildfire_input(),
                 position = "bottomright",
                 pal = pal,
                 values = ~as.factor(year),
                 title = "Fire season")
-  )
+    })
   
   #ERROR Polygon by clicking 
   #click on polygon

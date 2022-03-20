@@ -182,8 +182,9 @@ server <- function(input, output){
     plot_ly(
       x = ~wildfire_region$date,
       y = ~wildfire_region$area_ha,
+      color = ~as.factor(wildfire_region$year),
+      colors = pal(input$fire_season[1]:input$fire_season[2]),
       type = "bar",
-      colors = I("red"),
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 
       layout(title = str_c("Burned area (ha) in ",

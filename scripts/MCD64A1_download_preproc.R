@@ -42,11 +42,15 @@ source("scripts/utils/funcs.R")
 # Get country vector data -------------------------------------------------
 
 prt <- raster::getData("GADM", country = "PRT", level = 1) # get Portugal spatial data
-prt <- prt %>% 
+prtWGS84 <- prt %>% 
   st_as_sf() %>% 
   filter(!NAME_1 %in% c("Azores", "Madeira")) %>% # select only mainland portugal
-  st_transform(32629) %>% # reproject to local UTM zone
-  st_write("data/prt.gpkg", append = FALSE)
+  st_write("scripts/wildfire-dashboard/Data/prt_WGS84.gpkg", append = FALSE) # write out in WGS84 projection
+  # needed for leaflet creation in "scripts/wildfire-dashboard/app.R"
+
+prt <- prtWGS84 %>% 
+  st_transform(32629) %>% # reproject to local UTM zone for burned area calculation
+  st_write("data/prt.gpkg", append = FALSE) # write in data directory
 
 
 

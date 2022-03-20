@@ -81,7 +81,7 @@ ui <- dashboardPage(
                     choices = prt$NAME_1,
                     options = list(`actions-box` = TRUE),
                     multiple = TRUE,
-                    selected = prt$NAME_1)
+                    selected = "Faro") #prt$NAME_1
       )
     )
   ),
@@ -95,39 +95,48 @@ ui <- dashboardPage(
 # Define server logic ----
 server <- function(input, output){
   
-  # Reactive filtering of wildfires by date
+  
+  # Reactive filtering of wildfires by date input
   wildfire_input <- reactive({
     wildfire %>% 
       filter(year >= input$fire_season[1]) %>% 
       filter(year <= input$fire_season[2])
   })
   
-  # Reactive selection of region
+  
+  # Reactive selection of region input
   region_input <- reactive({
     prt %>% 
       filter(NAME_1 %in% input$region)
   })
   
-    
+  
+  # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
-    
-    
-    # Define color palette for year map
-    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
-    
+    leaflet() %>% 
+      addTiles()
+    })
+  
+  
+  # Add reactive part of leaflet (filterd by year or region) to leaflet proxy map
+  observe({
+      
     # Define boundary of selected region polygons
     bbox <- region_input() %>% 
       st_bbox() %>% 
       as.character()
     
-    leaflet() %>% 
-      addTiles() %>% 
-      fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>% 
-      addPolygons(data = wildfire_input(),
-                  color = ~pal(as.factor(year)),
-                  opacity = 1,
-                  fillColor = ~pal(as.factor(year)),
-                  fillOpacity = 1) %>% 
+    # Define color palette for year map
+    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+  
+    # User input defined leaflet map 
+    leafletProxy("mymap") %>% 
+    fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
+    addPolygons(data = wildfire_input(),
+                color = ~pal(as.factor(year)),
+                opacity = 1,
+                fillColor = ~pal(as.factor(year)),
+                fillOpacity = 1) %>% 
       addPolygons(data = region_input(),
                   color = "black",
                   opacity = 1,
@@ -136,40 +145,48 @@ server <- function(input, output){
                   highlightOptions = highlightOptions(color = "black",
                                                       weight = 2,
                                                       bringToFront = TRUE),
-                  popup = ~htmlEscape(NAME_1)) %>% 
+                  popup = ~htmlEscape(NAME_1))
+  })
+  
+  
+   # Add new legend and remove old one 
+  observe({
+    
+    # Define color palette for legend
+    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    
+    leafletProxy("mymap") %>% 
+      clearControls() %>% 
       addLegend(data = wildfire_input(),
                 position = "bottomright",
                 pal = pal,
                 values = ~as.factor(year),
                 title = "Fire season")
-    })
-  
-  #ERROR Polygon by clicking 
-  #click on polygon
-  #observe({ 
-  #  event <- input$map_shape_click
-  #  print(event$id)
-  #  
-  #  updateSelectInput(session,
-  #                    inputId = "region",
-  #                    label = "region",
-  #                    choices = prt$NAME_1,
-  #                    selected = event$id)
-  #})
-  
+  })
+
+ 
+  # Generation of bar plot based on user input
   output$myplot <- renderPlotly({
     
     # region subset
+    sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error
+    wildfire_region <- st_intersection(wildfire_input(), region_input())
     
+    # Create header for plot
+    if(identical(region_input()$NAME_1, prt$NAME_1)){
+      header_name <- ""
+    }
     
     plot_ly(
-      x = ~wildfire_input()$date,
-      y = ~wildfire_input()$area_ha,
+      x = ~wildfire_region$date,
+      y = ~wildfire_region$area_ha,
       type = "bar",
       color = I("red"),
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 
-      layout(title = str_c("Burned area in (ha)"),
+      layout(title = str_c("Burned area (ha) in ",
+                           if(identical(region_input()$NAME_1, prt$NAME_1)){
+                             "Portugal"} else {region_input()$NAME1}),
              yaxis = list(title = "Burned Area (in ha)"),
              xaxis = list(title = "Date"))
     

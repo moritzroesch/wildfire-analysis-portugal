@@ -127,8 +127,17 @@ server <- function(input, output){
   
   # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
-    leaflet() %>% 
-      addTiles()
+    leaflet() %>%
+      addTiles() %>% 
+      addPolygons(data = prt,
+                  color = "black",
+                  opacity = 1,
+                  fillOpacity = 0,
+                  weight = 1,
+                  highlightOptions = highlightOptions(color = "black",
+                                                      weight = 2,
+                                                      bringToFront = TRUE),
+                  label = ~htmlEscape(NAME_1))
     })
   
   
@@ -144,22 +153,26 @@ server <- function(input, output){
     pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
   
     # User input defined leaflet map 
-    leafletProxy("mymap") %>% 
+    m <- leafletProxy("mymap") %>% 
     fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
     addPolygons(data = wildfire_input(),
                 color = ~pal(as.factor(year)),
                 opacity = 1,
                 fillColor = ~pal(as.factor(year)),
-                fillOpacity = 1) %>% 
-    addPolygons(data = region_input(),
-                color = "black",
-                opacity = 1,
-                fillOpacity = 0,
-                weight = 1)#,
-               # highlightOptions = highlightOptions(color = "red",
-              #                                      weight = 2,
-              #                                      bringToFront = TRUE),
-              #  label = ~htmlEscape(NAME_1))
+                fillOpacity = 1)
+    
+    if (input$region != "Portugal"){
+      m %>% 
+        addPolygons(data = region_input(),
+                  color = "red",
+                  opacity = 1,
+                  fillOpacity = 0,
+                  weight = 3,
+      highlightOptions = highlightOptions(color = "red",
+                                          weight = 4,
+                                          bringToFront = TRUE),
+      label = ~htmlEscape(NAME_1))
+    }
   })
   
   

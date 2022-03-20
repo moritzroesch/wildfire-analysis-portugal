@@ -48,7 +48,6 @@ library(tidyverse)
 # Load and manipulate data -------------------------------------------------
 
 # When running the app, working directory changes to wildfire-dashboard
-#setwd("scripts/wildfire-dashboard")
 wildfire <- st_read("Data/burned_area_2017_2021_WGS84.gpkg")
 prt <- st_read("Data/prt_WGS84.gpkg")
 
@@ -67,7 +66,7 @@ prt_uni <- st_union(prt)
 ui <- dashboardPage(
   skin = "red",
   dashboardHeader(
-    title = str_c("Burned area after wildfires in Portugal during fire seasons ",
+    title = str_c("Burned areas after wildfires in Portugal during fire seasons ",
                   min(wildfire$year), "-",
                   max(wildfire$year)),
     titleWidth = 800
@@ -128,7 +127,8 @@ server <- function(input, output){
   # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
     leaflet() %>%
-      addTiles() %>% 
+      addProviderTiles(providers$Esri.WorldShadedRelief) %>% 
+      addProviderTiles(providers$Esri.WorldImagery) %>% 
       addPolygons(data = prt,
                   color = "black",
                   opacity = 1,
@@ -137,7 +137,10 @@ server <- function(input, output){
                   highlightOptions = highlightOptions(color = "black",
                                                       weight = 2,
                                                       bringToFront = TRUE),
-                  label = ~htmlEscape(NAME_1))
+                  label = ~htmlEscape(NAME_1)) %>% 
+      addMeasure(position = "topleft",
+                 primaryLengthUnit = "meters",
+                 primaryAreaUnit = "hectares")
     })
   
   

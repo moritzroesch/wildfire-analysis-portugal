@@ -55,7 +55,9 @@ prt <- st_read("Data/prt_WGS84.gpkg")
 region_list <- c("Portugal", prt$NAME_1)
 
 # Generate unified polygon of Portugal
-prt_uni <- st_union(prt)
+prt_uni <- st_union(prt) %>% 
+  st_sf() %>% 
+  mutate(NAME_1 = "Portugal")
 
 
 
@@ -126,6 +128,7 @@ server <- function(input, output){
   
   # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
+    
     leaflet() %>%
       addTiles(group = "OpenStreetMap") %>% 
       addProviderTiles(providers$Esri.WorldImagery, group = "Esri WorldImagery") %>% 
@@ -139,13 +142,22 @@ server <- function(input, output){
                                                       weight = 2,
                                                       bringToFront = TRUE),
                   label = ~htmlEscape(NAME_1)) %>%
+      addPolygons(data = region_input(),
+                  color = "black",
+                  opacity = 1,
+                  fillOpacity = 0,
+                  weight = 1,
+                  highlightOptions = highlightOptions(color = "red",
+                                                      weight = 2,
+                                                      bringToFront = TRUE),
+                  layerId = "sel_region") %>% 
       addLayersControl(baseGroups = c("OpenStreetMap",
                                       "Esri WorldImagery",
                                       "Esri WorldTopoMap")) %>% 
       addMeasure(position = "topleft",
                  primaryLengthUnit = "meters",
                  primaryAreaUnit = "hectares")
-    })
+  })
   
   
   # Add reactive part of leaflet (filtered by year or region) to leaflet proxy map
@@ -160,7 +172,7 @@ server <- function(input, output){
     pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
   
     # User input defined leaflet map 
-    m <- leafletProxy("mymap") %>% 
+    m_proxy <- leafletProxy("mymap") %>% 
     fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
     addPolygons(data = wildfire_input(),
                 color = ~pal(as.factor(year)),
@@ -169,26 +181,18 @@ server <- function(input, output){
                 fillOpacity = 1)
     
     if (input$region != "Portugal"){
-      m %>% 
-        clearShapes() %>% 
-        addPolygons(data = prt,
-                    color = "black",
+      m_proxy %>% 
+        removeShape(layerId = "sel_region") %>% 
+        addPolygons(data = region_input(),
+                    color = "red",
                     opacity = 1,
                     fillOpacity = 0,
-                    weight = 1,
-                    highlightOptions = highlightOptions(color = "black",
-                                                        weight = 2,
+                    weight = 3,
+                    highlightOptions = highlightOptions(color = "red",
+                                                        weight = 4,
                                                         bringToFront = TRUE),
-                    label = ~htmlEscape(NAME_1)) %>% 
-        addPolygons(data = region_input(),
-                  color = "red",
-                  opacity = 1,
-                  fillOpacity = 0,
-                  weight = 3,
-                  highlightOptions = highlightOptions(color = "red",
-                                                      weight = 4,
-                                                      bringToFront = TRUE),
-                  label = ~htmlEscape(NAME_1))
+                    label = ~htmlEscape(NAME_1),
+                    layerId = "sel_region")
     }
   })
   
@@ -223,7 +227,6 @@ server <- function(input, output){
     } else {
       wildfire_region <- st_intersection(wildfire_input(), region_input())
     }
-    
     
     plot_ly(
       x = ~wildfire_region$date,

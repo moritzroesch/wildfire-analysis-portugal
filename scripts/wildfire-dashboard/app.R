@@ -70,7 +70,7 @@ ui <- dashboardPage(
                     label = h3("Select fire season:"),
                     min = min(wildfire$year),
                     max = max(wildfire$year),
-                    value = c(min(wildfire$year), max(wildfire$year)),
+                    value = c(min(wildfire$year), min(wildfire$year)),
                     sep="",
                     step = 1)
       ),

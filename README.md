@@ -1,5 +1,5 @@
 
-# Visualizing the wildfires Portugal 2017-2021
+# Visualizing wildfires during fire seasons 2017-2021 in Portugal
 
 This repo interactivley visualizes the burnt areas during the fire seasons 2017-2021 in Portugal in a ```shiny```app.
 The burned areas were derived from MODIS MCD64A1 Burned Area product, which was automatically downloaded and processed with ```MODIStsp```.

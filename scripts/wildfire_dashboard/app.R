@@ -41,10 +41,10 @@ library(tidyverse)
 
 # Load data ---------------------------------------------------------------
 
-wildfire <- st_read("data/burned_area_2017_2021.gpkg")
+wildfire <- st_read("scripts/wildfire_dashboard/Data/burned_area_2017_2021.gpkg")
 wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
 wildfire$year <- as.numeric(wildfire$year)
-prt <- st_read("data/prt.gpkg")
+prt <- st_read("scripts/wildfire_dashboard/Data/prt.gpkg")
 prt <- st_transform(prt, 4326)
 
 

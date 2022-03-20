@@ -172,6 +172,9 @@ server <- function(input, output){
   # Generation of bar plot based on user input
   output$myplot <- renderPlotly({
     
+    # Define color palette for bar color
+    pal <- colorFactor("RdYlBu", domain = as.factor(wildfire_input()$year))
+    
     # region subset
     sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error
     wildfire_region <- st_intersection(wildfire_input(), region_input())
@@ -180,7 +183,7 @@ server <- function(input, output){
       x = ~wildfire_region$date,
       y = ~wildfire_region$area_ha,
       type = "bar",
-      color = I("red"),
+      colors = I("red"),
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 
       layout(title = str_c("Burned area (ha) in ",

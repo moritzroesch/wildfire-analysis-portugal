@@ -157,7 +157,7 @@ server <- function(input, output){
       as.character()
     
     # Define color palette for year map
-    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
   
     # User input defined leaflet map 
     m <- leafletProxy("mymap") %>% 
@@ -170,15 +170,25 @@ server <- function(input, output){
     
     if (input$region != "Portugal"){
       m %>% 
+        clearShapes() %>% 
+        addPolygons(data = prt,
+                    color = "black",
+                    opacity = 1,
+                    fillOpacity = 0,
+                    weight = 1,
+                    highlightOptions = highlightOptions(color = "black",
+                                                        weight = 2,
+                                                        bringToFront = TRUE),
+                    label = ~htmlEscape(NAME_1)) %>% 
         addPolygons(data = region_input(),
                   color = "red",
                   opacity = 1,
                   fillOpacity = 0,
                   weight = 3,
-      highlightOptions = highlightOptions(color = "red",
-                                          weight = 4,
-                                          bringToFront = TRUE),
-      label = ~htmlEscape(NAME_1))
+                  highlightOptions = highlightOptions(color = "red",
+                                                      weight = 4,
+                                                      bringToFront = TRUE),
+                  label = ~htmlEscape(NAME_1))
     }
   })
   
@@ -187,7 +197,7 @@ server <- function(input, output){
   observe({
     
     # Define color palette for legend
-    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
     
     leafletProxy("mymap") %>% 
       clearControls() %>% 
@@ -204,7 +214,7 @@ server <- function(input, output){
   output$myplot <- renderPlotly({
     
     # Define color palette for bar color
-    pal <- colorFactor("Spectral", domain = as.factor(wildfire_input()$year))
+    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
     
     # region subset
     sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error

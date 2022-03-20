@@ -41,11 +41,12 @@ library(tidyverse)
 
 # Load data ---------------------------------------------------------------
 
-wildfire <- st_read("scripts/wildfire_dashboard/Data/burned_area_2017_2021.gpkg")
-wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
-wildfire$year <- as.numeric(wildfire$year)
-prt <- st_read("scripts/wildfire_dashboard/Data/prt.gpkg")
-prt <- st_transform(prt, 4326)
+# When running the app, working directory changes to wildfire-dashboard
+wildfire <- st_read("data/burned_area_2017_2021_WGS84.gpkg")
+#wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
+#wildfire$year <- as.numeric(wildfire$year)
+prt <- st_read("data/prt_WGS84.gpkg")
+#prt <- st_transform(prt, 4326)
 
 
 
@@ -91,7 +92,6 @@ ui <- dashboardPage(
 
 # Define server logic ----
 server <- function(input, output){
-  
   
   # Reactive filtering of wildfires by date input
   wildfire_input <- reactive({
@@ -168,11 +168,6 @@ server <- function(input, output){
     # region subset
     sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error
     wildfire_region <- st_intersection(wildfire_input(), region_input())
-    
-    # Create header for plot
-    if(identical(region_input()$NAME_1, prt$NAME_1)){
-      header_name <- ""
-    }
     
     plot_ly(
       x = ~wildfire_region$date,

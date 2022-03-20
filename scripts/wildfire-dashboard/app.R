@@ -78,7 +78,7 @@ ui <- dashboardPage(
                     label = h3("Select fire season:"),
                     min = min(wildfire$year),
                     max = max(wildfire$year),
-                    value = c(min(wildfire$year), min(wildfire$year)),
+                    value = c(min(wildfire$year), min(wildfire$year) + 1),
                     sep="",
                     step = 1)
       ),
@@ -127,8 +127,9 @@ server <- function(input, output){
   # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
     leaflet() %>%
-      addProviderTiles(providers$Esri.WorldShadedRelief) %>% 
-      addProviderTiles(providers$Esri.WorldImagery) %>% 
+      addTiles(group = "OpenStreetMap") %>% 
+      addProviderTiles(providers$Esri.WorldImagery, group = "Esri WorldImagery") %>% 
+      addProviderTiles(providers$Esri.WorldTopoMap, group = "Esri WorldTopoMap") %>% 
       addPolygons(data = prt,
                   color = "black",
                   opacity = 1,
@@ -137,7 +138,10 @@ server <- function(input, output){
                   highlightOptions = highlightOptions(color = "black",
                                                       weight = 2,
                                                       bringToFront = TRUE),
-                  label = ~htmlEscape(NAME_1)) %>% 
+                  label = ~htmlEscape(NAME_1)) %>%
+      addLayersControl(baseGroups = c("OpenStreetMap",
+                                      "Esri WorldImagery",
+                                      "Esri WorldTopoMap")) %>% 
       addMeasure(position = "topleft",
                  primaryLengthUnit = "meters",
                  primaryAreaUnit = "hectares")

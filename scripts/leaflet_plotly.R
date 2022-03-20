@@ -54,6 +54,13 @@ wildfire$year <- as.numeric(wildfire$year)
 prt <- st_read("data/prt.gpkg")
 prt <- st_transform(prt, 4326)
 
+porto <- filter(prt, NAME_1 == "Porto")
+plot(porto)
+plot(wildfire)
+sf_use_s2(FALSE)
+wild_porto <- st_intersection(wildfire, porto)
+plot(wild_porto)
+
 fig <- plot_ly(
   x = ~wildfire$date,
   y = ~wildfire$area_ha,

@@ -39,7 +39,6 @@ library(tidyverse)
 
 
 
-
 # Load data ---------------------------------------------------------------
 
 wildfire <- st_read("data/burned_area_2017_2021.gpkg")
@@ -48,8 +47,6 @@ wildfire$year <- as.numeric(wildfire$year)
 prt <- st_read("data/prt.gpkg")
 prt <- st_transform(prt, 4326)
 
-# Define color palette for year map
-pal <- colorFactor("RdYlBu", domain = as.factor(wildfire$year))
 
 
 # UI ----------------------------------------------------------------------
@@ -81,7 +78,7 @@ ui <- dashboardPage(
                     choices = prt$NAME_1,
                     options = list(`actions-box` = TRUE),
                     multiple = TRUE,
-                    selected = "Faro") #prt$NAME_1
+                    selected = prt$NAME_1)
       )
     )
   ),

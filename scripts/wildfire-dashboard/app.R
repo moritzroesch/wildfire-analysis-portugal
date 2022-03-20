@@ -2,17 +2,24 @@
 ##
 ## Script name: app.R
 ##
-## Purpose of script: Creates shiny app for interactive leaflet map of burned
-##                    areas in Portugal during fire seasons 2017-2021
+## Purpose of script: Creates shiny app for interactive leaflet map and 
+##                    plotly bar plot of burned areas in Portugal during
+##                    fire seasons 2017-2021
 ##
 ## Sections:  Load data 
-##              - load created wildfire vector data
+##              - load created wildfire and portugal vector data
 ##
 ##            UI
 ##              - construction of dashboard ui
+##              - definition of user input for reactive leaflet and plotly
 ##
 ##            server
-##              - populate ui with input of server
+##              - Reactive filtering of wildfires by year input
+##              - Reactive selection of region input
+##              - Creation of static Leaflet basemap
+##              - adding of reactive processes to leaflet proxy map
+##              - creation of reactive plotly bar plot based on xear and
+##                region input
 ##
 ## Author: Moritz Rösch
 ##
@@ -22,9 +29,6 @@
 
 # This is a Shiny web application. You can run the application by clicking
 # the 'Run App' button above.
-
-# FILE IS NOT FOUND!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Upload maybe needed, shp need to be in dir of app.R
 
 # Packages ----------------------------------------------------------------
 
@@ -90,7 +94,12 @@ ui <- dashboardPage(
 )
 
 
-# Define server logic ----
+
+
+# Server ------------------------------------------------------------------
+
+# Define server logic
+
 server <- function(input, output){
   
   # Reactive filtering of wildfires by date input
@@ -158,7 +167,8 @@ server <- function(input, output){
                 position = "bottomright",
                 pal = pal,
                 values = ~as.factor(year),
-                title = "Fire season")
+                title = "Fire season",
+                opacity = 1)
   })
 
  
@@ -189,4 +199,5 @@ server <- function(input, output){
 
 # Run the app ----
 shinyApp(ui = ui, server = server)
+
 

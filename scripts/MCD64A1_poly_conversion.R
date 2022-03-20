@@ -33,7 +33,7 @@ library(tidyverse)
 
 prt <- st_read("data/prt.gpkg")
 
-years <- as.character(c(2017:2021))
+years <- 2017:2021
 months <- c("June", "July", "August", "September")
 data <- list()
 for (i in years){
@@ -54,7 +54,7 @@ data
 poly_yearly_list <- list() # list for storing the yearly burned area polygons
 # Polygonizing all monthly burned areas takes a couple minutes, feel free to grab a coffee ;)
 for (i in 1:length(data)){
-  # IGNORE any error: attempt to apply non-function
+  # IGNORE any ERROR: attempt to apply non-function
   # Error couldn´t be localized but does not interfere with the loop, therefore it can be ignored.
   
   # select time series stack and year variable
@@ -96,6 +96,11 @@ for (i in 1:length(data)){
     burned <- do.call(rbind, poly_yearly_list)
     st_write(burned, str_c("data/burned_area_",
                            years[1], "_", years[length(years)], ".gpkg"), append = FALSE)
+    # Reproject to WGS84 lat/lon for mapping in leaflet and write to shiny app dir
+    burned_WGS84 <- burned %>% 
+      st_transform(4326) %>% 
+      st_write(str_c("scripts/wildfire-dashboard/Data/burned_area_",
+                     years[1], "_", years[length(years)], "_WGS84.gpkg"), append = FALSE)
     # Clear duplicates in env
     rm(poly_monthly_list, poly_yearly_list)
   }

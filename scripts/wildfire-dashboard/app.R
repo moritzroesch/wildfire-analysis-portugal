@@ -50,7 +50,6 @@ wildfire <- st_read("data/burned_area_2017_2021_WGS84.gpkg")
 #wildfire <- st_transform(wildfire, 4326) # reproject to WGS84 for leaflet
 #wildfire$year <- as.numeric(wildfire$year)
 prt <- st_read("data/prt_WGS84.gpkg")
-#prt <- st_transform(prt, 4326)
 
 
 

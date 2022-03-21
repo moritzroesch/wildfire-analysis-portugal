@@ -40,7 +40,7 @@ list_of_packages = c("shiny", "shinydashboard", "shinyWidgets",
                      "lwgeom", "tidyverse")
 
 lapply(list_of_packages, 
-       function(x) if(!require(x,character.only = TRUE)) install.packages(x, dependencies = TRUE))
+       function(x) if(!require(x,character.only = TRUE)) install.packages(x))
 
 # load packages
 library(shiny)

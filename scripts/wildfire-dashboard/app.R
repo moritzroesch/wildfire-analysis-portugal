@@ -61,7 +61,7 @@ prt_uni <- st_union(prt) %>%
   mutate(NAME_1 = "Portugal")
 
 # define color palette function for leaflet and pltoly to access
-pal <- colorFactor("Spectral", domain = as.factor(wildfire$year))
+pal <- colorFactor("Set1", domain = as.factor(wildfire$year))
 
 
 
@@ -163,7 +163,7 @@ server <- function(input, output){
                   opacity = 1,
                   fillOpacity = 0,
                   weight = 1,
-                  highlightOptions = highlightOptions(color = "red",
+                  highlightOptions = highlightOptions(color = "grey",
                                                       weight = 2,
                                                       bringToFront = TRUE),
                   label = HTML(str_c("<b>", region_input()$NAME_1, "</b>",
@@ -199,11 +199,11 @@ server <- function(input, output){
       m_proxy %>% 
         removeShape(layerId = "sel_region") %>% 
         addPolygons(data = region_input(),
-                    color = "red",
+                    color = "grey",
                     opacity = 1,
                     fillOpacity = 0,
                     weight = 3,
-                    highlightOptions = highlightOptions(color = "red",
+                    highlightOptions = highlightOptions(color = "grey",
                                                         weight = 4,
                                                         bringToFront = TRUE),
                     label = HTML(str_c("<b>", region_input()$NAME_1, "</b>",

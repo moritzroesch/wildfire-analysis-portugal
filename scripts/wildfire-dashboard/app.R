@@ -60,6 +60,9 @@ prt_uni <- st_union(prt) %>%
   st_sf() %>% 
   mutate(NAME_1 = "Portugal")
 
+# define color palette function for leaflet and pltoly to access
+pal <- colorFactor("Spectral", domain = as.factor(wildfire$year))
+
 
 
 # UI ----------------------------------------------------------------------
@@ -98,7 +101,6 @@ ui <- dashboardPage(
     fluidRow(box(width = 12, plotlyOutput(outputId = "myplot")))
   )
 )
-
 
 
 
@@ -183,9 +185,6 @@ server <- function(input, output){
     bbox <- region_input() %>% 
       st_bbox() %>% 
       as.character()
-    
-    # Define color palette for year map
-    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
   
     # User input defined leaflet map 
     m_proxy <- leafletProxy("mymap") %>% 
@@ -217,9 +216,6 @@ server <- function(input, output){
    # Add new legend and remove old one 
   observe({
     
-    # Define color palette for legend
-    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
-    
     leafletProxy("mymap") %>% 
       clearControls() %>% 
       addLegend(data = wildfire_input(),
@@ -234,14 +230,18 @@ server <- function(input, output){
   # Generation of bar plot based on user input
   output$myplot <- renderPlotly({
     
-    # Define color palette for bar color
-    pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
+    # Create HEX colors for years
+    plt_pal <- setNames(pal(unique(wildfire$year)),
+                        nm = unique(wildfire$year)) # set year names to each color
+    plt_pal_index_vec <- setNames(1:5, nm = unique(wildfire$year)) # create index vector for subsetting colors
+    s_date <- plt_pal_index_vec[as.character(input$fire_season[1])] # define hex color for start date
+    e_date <- plt_pal_index_vec[as.character(input$fire_season[2])] # define hex color for en date
     
     plot_ly(
       x = ~wildfire_input()$date,
       y = ~wildfire_input()$area_ha,
       color = ~as.factor(wildfire_input()$year),
-      colors = pal(input$fire_season[1]:input$fire_season[2]),
+      colors = plt_pal[s_date:e_date],#~pal(wildfire_input()$year),#pal(input$fire_season[1]:input$fire_season[2]),
       type = "bar",
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 

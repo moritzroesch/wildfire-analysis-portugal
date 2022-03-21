@@ -17,7 +17,7 @@ runGitHub(repo = "wildfire-analysis-portugal",
 The app contains a interactive ```leaflet``` map of Portugal with the yearly burned areas.
 Additionally, the app contains a linked ```plotly``` bar plot which qunatifies the burned area over time.
 The app can be filtered by the yearly fire seasons or by the subdivisions of Portugal.
-INSERT SCREENSHOT HERE
+![alt text](auxiliary/app_screenshot.JPG)
 
 ## Download and processing MODIS burned area product
 To redo the automatic downloading and processing of MODIS MCD64A1 Burned Area product clone the repository and run follwing scripts:

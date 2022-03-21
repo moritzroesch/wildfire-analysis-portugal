@@ -71,15 +71,18 @@ pal <- colorFactor("Set1", domain = as.factor(wildfire$year))
 
 ui <- dashboardPage(
   skin = "red",
+  # Header
   dashboardHeader(
     title = str_c("Burned areas after wildfires in Portugal during fire seasons ",
                   min(wildfire$year), "-",
                   max(wildfire$year)),
     titleWidth = 800
   ),
+  # Define Sidebar input options
   dashboardSidebar(
     column(12,
       fluidRow(
+        # Slider input with default selcted to 2017-2018 (for efficiency reasons when starting the app)
         sliderInput(inputId = "fire_season",
                     label = h3("Select fire season:"),
                     min = min(wildfire$year),
@@ -89,6 +92,7 @@ ui <- dashboardPage(
                     step = 1)
       ),
       fluidRow(
+        # Picker input to select region, default is set to whole Portugal
         pickerInput(inputId = "region",
                     label = h3("Select region:"),
                     choices = region_list,
@@ -96,6 +100,7 @@ ui <- dashboardPage(
       )
     )
   ),
+  # Main app content with leaflet map and plotly bar plot
   dashboardBody(
     fluidRow(box(width = 12, leafletOutput(outputId = "mymap"))),
     fluidRow(box(width = 12, plotlyOutput(outputId = "myplot")))
@@ -113,10 +118,10 @@ server <- function(input, output){
   # Reactive selection of region input
   region_input <- reactive({
     if (input$region == "Portugal"){
-      prt_uni
+      prt_uni # Prtugal bounadry geometry
     } else {
       prt %>% 
-        filter(NAME_1 == input$region)
+        filter(NAME_1 == input$region) # single region geometry
     }
   })
   
@@ -166,13 +171,13 @@ server <- function(input, output){
                   highlightOptions = highlightOptions(color = "grey",
                                                       weight = 2,
                                                       bringToFront = TRUE),
-                  label = HTML(str_c("<b>", region_input()$NAME_1, "</b>",
-                                "<br><i>Total area burned: </i>", burned(), " ha</br>")),
-                  layerId = "sel_region") %>% 
-      addLayersControl(baseGroups = c("OpenStreetMap",
+                  label = HTML(str_c("<b>", region_input()$NAME_1, "</b>", # creates HTML label with summed burned area
+                                     "<br><i>Total area burned: </i>", burned(), " ha</br>")),
+                  layerId = "sel_region") %>%
+      addLayersControl(baseGroups = c("OpenStreetMap", # control widget for switching betwenn basemaps
                                       "Esri WorldImagery",
                                       "Esri WorldTopoMap")) %>% 
-      addMeasure(position = "topleft",
+      addMeasure(position = "topleft", # adds measurement tool
                  primaryLengthUnit = "meters",
                  primaryAreaUnit = "hectares")
   })
@@ -186,7 +191,7 @@ server <- function(input, output){
       st_bbox() %>% 
       as.character()
   
-    # User input defined leaflet map 
+    # User input defined (filtered by year and region) leaflet map of burned areas
     m_proxy <- leafletProxy("mymap") %>% 
     fitBounds(bbox[1], bbox[2], bbox[3], bbox[4]) %>%
     addPolygons(data = wildfire_input(),
@@ -195,6 +200,7 @@ server <- function(input, output){
                 fillColor = ~pal(as.factor(year)),
                 fillOpacity = 1)
     
+    # Removal of previous polygon if new region is selected
     if (input$region != "Portugal"){
       m_proxy %>% 
         removeShape(layerId = "sel_region") %>% 
@@ -213,7 +219,7 @@ server <- function(input, output){
   })
   
   
-   # Add new legend and remove old one 
+   # Updating the legend if new input is selected
   observe({
     
     leafletProxy("mymap") %>% 
@@ -227,7 +233,7 @@ server <- function(input, output){
   })
 
  
-  # Generation of bar plot based on user input
+  # Generation of bar plot based on user input (filtered by year and region)
   output$myplot <- renderPlotly({
     
     # Create HEX colors for years
@@ -241,7 +247,7 @@ server <- function(input, output){
       x = ~wildfire_input()$date,
       y = ~wildfire_input()$area_ha,
       color = ~as.factor(wildfire_input()$year),
-      colors = plt_pal[s_date:e_date],#~pal(wildfire_input()$year),#pal(input$fire_season[1]:input$fire_season[2]),
+      colors = plt_pal[s_date:e_date],
       type = "bar",
       hovertemplate = paste('<b>Date</b>: %{x}',
                             '<br><b>Burned area</b>: %{y:.2f} ha</br>')) %>% 

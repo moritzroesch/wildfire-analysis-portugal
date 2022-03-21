@@ -26,4 +26,4 @@ To redo the automatic downloading and processing of MODIS MCD64A1 Burned Area pr
 * Using of ```MODIStsp``` package to query five years of fire season (June-September) MCD64A1 product with a predefined [.json setup file](auxiliary/MCD64A1_PRT_setup.json)
     - pre-processing (i.e., reprojecting, cropping, mosaicing) done automatically by ```MODIStsp```
 2. [MCD64A1_poly_conversion](scripts/MCD64A1_poly_conversion.R)
-* Loasing of time series raster stacks and conversion to polygons
+* Loading of time series raster stacks and conversion to polygons

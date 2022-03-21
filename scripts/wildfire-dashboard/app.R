@@ -41,6 +41,7 @@ library(leaflet)
 library(htmltools)
 library(plotly)
 library(sf)
+library(lwgeom)
 library(tidyverse)
 
 
@@ -107,24 +108,37 @@ ui <- dashboardPage(
 
 server <- function(input, output){
   
-  # Reactive filtering of wildfires by date input
-  wildfire_input <- reactive({
-    wildfire %>% 
-      filter(year >= input$fire_season[1]) %>% 
-      filter(year <= input$fire_season[2])
-  })
-  
-  
   # Reactive selection of region input
   region_input <- reactive({
     if (input$region == "Portugal"){
       prt_uni
     } else {
       prt %>% 
-        filter(NAME_1 %in% input$region)
+        filter(NAME_1 == input$region)
     }
   })
   
+  # Reactive filtering of wildfires by date input and clip to region_input
+  wildfire_input <- reactive({
+    sf_use_s2(FALSE) # turn s2 processing in sf package for intersection function
+    if (input$region == "Portugal"){
+      wildfire %>% 
+        filter(year >= input$fire_season[1]) %>% # filter by selected dates
+        filter(year <= input$fire_season[2]) %>% 
+        mutate(area_ha = st_area(.) / 10000) # recalculate burned area in for clip
+    } else {
+      wildfire %>% 
+        filter(year >= input$fire_season[1]) %>% # filter by selected dates
+        filter(year <= input$fire_season[2]) %>% 
+        st_intersection(region_input()) %>% # clip to selected region
+        mutate(area_ha = st_area(.) / 10000) # recalculate burned area in for clip
+    }
+  })
+  
+  # Create sum of area for leaflet label
+  burned <- reactive({
+    round(sum(wildfire_input()$area_ha), 2)
+  })
   
   # Create static leaflet basemap  
   output$mymap <- renderLeaflet({
@@ -150,6 +164,8 @@ server <- function(input, output){
                   highlightOptions = highlightOptions(color = "red",
                                                       weight = 2,
                                                       bringToFront = TRUE),
+                  label = HTML(str_c("<b>", region_input()$NAME_1, "</b>",
+                                "<br><i>Total area burned: </i>", burned(), " ha</br>")),
                   layerId = "sel_region") %>% 
       addLayersControl(baseGroups = c("OpenStreetMap",
                                       "Esri WorldImagery",
@@ -191,7 +207,8 @@ server <- function(input, output){
                     highlightOptions = highlightOptions(color = "red",
                                                         weight = 4,
                                                         bringToFront = TRUE),
-                    label = ~htmlEscape(NAME_1),
+                    label = HTML(str_c("<b>", region_input()$NAME_1, "</b>",
+                                       "<br><i>Total area burned: </i>", burned(), " ha</br>")),
                     layerId = "sel_region")
     }
   })
@@ -220,18 +237,10 @@ server <- function(input, output){
     # Define color palette for bar color
     pal <- colorFactor("YlOrRd", domain = as.factor(wildfire_input()$year))
     
-    # region subset
-    sf_use_s2(FALSE) # switch off spherical geometry (s2) to solve intersection error
-    if (input$region == "Portugal"){
-      wildfire_region <- wildfire_input()
-    } else {
-      wildfire_region <- st_intersection(wildfire_input(), region_input())
-    }
-    
     plot_ly(
-      x = ~wildfire_region$date,
-      y = ~wildfire_region$area_ha,
-      color = ~as.factor(wildfire_region$year),
+      x = ~wildfire_input()$date,
+      y = ~wildfire_input()$area_ha,
+      color = ~as.factor(wildfire_input()$year),
       colors = pal(input$fire_season[1]:input$fire_season[2]),
       type = "bar",
       hovertemplate = paste('<b>Date</b>: %{x}',

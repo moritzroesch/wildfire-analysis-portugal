@@ -34,6 +34,15 @@
 
 # Packages ----------------------------------------------------------------
 
+# Check for installed packages and install if required
+list_of_packages = c("shiny", "shinydashboard", "shinyWidgets",
+                     "leaflet", "htmltools", "plotly", "sf",
+                     "lwgeom", "tidyverse")
+
+lapply(list_of_packages, 
+       function(x) if(!require(x,character.only = TRUE)) install.packages(x, dependencies = TRUE))
+
+# load packages
 library(shiny)
 library(shinydashboard)
 library(shinyWidgets)

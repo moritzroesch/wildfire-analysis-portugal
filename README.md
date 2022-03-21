@@ -8,10 +8,10 @@ The burned areas were derived from MODIS MCD64A1 Burned Area product, which was 
 
 To deploy the ```shiny``` app directly via GitHub run:
 ```
-runGitHub(repo = "wildfire-analysis-portugal",
-          username = "moritzroesch",
-          ref = "main",
-          subdir = "scripts/wildfire-dashboard")
+shiny::runGitHub(repo = "wildfire-analysis-portugal",
+          	 username = "moritzroesch",
+          	 ref = "main",
+          	 subdir = "scripts/wildfire-dashboard")
 ```  
 The app contains a interactive ```leaflet``` map of Portugal with the yearly burned areas.
 Additionally, the app contains a linked ```plotly``` bar plot which qunatifies the burned area over time.

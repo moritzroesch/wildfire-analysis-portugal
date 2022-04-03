@@ -8,6 +8,7 @@ The burned areas were derived from MODIS MCD64A1 Burned Area product, which was 
 
 To deploy the ```shiny``` app directly via GitHub run:
 ```
+if(!require(shiny)) install.packages("shiny")
 shiny::runGitHub(repo = "wildfire-analysis-portugal",
           	 username = "moritzroesch",
           	 ref = "main",
